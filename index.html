@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>REST API + JSON — API Katalog Produk</title>
+<style>
+:root{
+  --bg:#f6f7fb;--surface:#fff;--text:#1c2230;--muted:#5b6577;--border:#e3e6ee;
+  --accent:#0f8b8d;--accent-ink:#fff;--code-bg:#1e2433;--code-text:#e9edf7;
+  --ok:#1a8f5e;--warn:#b5540a;--bad:#c0392b;
+  color-scheme:light;box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#11141c;--surface:#181d29;--text:#eef1f8;--muted:#9aa3b8;--border:#2a3042;
+    --accent:#4fd1d3;--accent-ink:#06191a;--code-bg:#0d1119;--code-text:#d9e1f5;
+    --ok:#4fd398;--warn:#f2a35a;--bad:#ff8a7a;color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#11141c;--surface:#181d29;--text:#eef1f8;--muted:#9aa3b8;--border:#2a3042;
+  --accent:#4fd1d3;--accent-ink:#06191a;--code-bg:#0d1119;--code-text:#d9e1f5;
+  --ok:#4fd398;--warn:#f2a35a;--bad:#ff8a7a;color-scheme:dark;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.wrap{max-width:880px;margin:0 auto;padding:28px 18px 60px}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);padding:10px 0 6px;border-bottom:1px solid var(--border)}
+.eyebrow{color:var(--accent);font-weight:700;font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+h1{font-size:clamp(21px,4vw,29px);margin:4px 0 2px}
+.sub{color:var(--muted);font-size:15px;margin-bottom:12px}
+nav.tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:10px}
+nav.tabs button{flex:0 0 auto;border:1px solid var(--border);background:var(--surface);color:var(--text);padding:8px 14px;border-radius:999px;font-size:13.5px;cursor:pointer}
+nav.tabs button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+section.panel{display:none;padding-top:20px}
+section.panel.active{display:block}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 20px;margin-bottom:16px}
+h2{font-size:19px;margin:0 0 10px}
+h3{font-size:15.5px;margin:16px 0 8px}
+p{margin:0 0 10px}
+.muted{color:var(--muted)}
+ul,ol{margin:0 0 10px;padding-left:22px}
+li{margin-bottom:5px}
+.story{border-left:3px solid var(--accent);padding:10px 14px;background:color-mix(in srgb,var(--accent) 8%,var(--surface));border-radius:0 10px 10px 0}
+.analogy{border-left:3px solid var(--ok);padding:10px 14px;background:color-mix(in srgb,var(--ok) 8%,var(--surface));border-radius:0 10px 10px 0;margin-top:10px}
+pre{background:var(--code-bg);color:var(--code-text);padding:14px 16px;border-radius:10px;overflow-x:auto;font-size:13px;line-height:1.5;margin:10px 0}
+code{font-family:ui-monospace,SFMono-Regular,Consolas,Menlo,monospace}
+p code,li code,td code{background:color-mix(in srgb,var(--accent) 12%,var(--surface));padding:1px 5px;border-radius:5px;font-size:12.5px}
+table{width:100%;border-collapse:collapse;margin:10px 0;font-size:13.5px}
+th,td{border:1px solid var(--border);padding:7px 9px;text-align:left;vertical-align:top}
+th{background:color-mix(in srgb,var(--accent) 10%,var(--surface))}
+.tag{display:inline-block;font-size:11.5px;font-weight:700;padding:2px 8px;border-radius:999px;background:color-mix(in srgb,var(--ok) 18%,var(--surface));color:var(--ok);margin-bottom:8px}
+.qa{border:1px dashed var(--border);border-radius:10px;padding:10px 14px;margin-bottom:8px}
+.qa summary{cursor:pointer;font-weight:600;list-style:none}
+.qa summary::-webkit-details-marker{display:none}
+.qa summary::before{content:"▸ ";color:var(--accent)}
+.qa[open] summary::before{content:"▾ "}
+.qa p{margin:8px 0 0}
+.sim{display:grid;gap:10px}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+select,input,textarea{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 10px}
+input.url{flex:1;min-width:180px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+textarea{width:100%;min-height:90px;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+button.go{background:var(--accent);color:var(--accent-ink);border:0;border-radius:8px;padding:9px 18px;font-weight:700;cursor:pointer}
+button.ghost{background:transparent;border:1px solid var(--border);color:var(--text);border-radius:8px;padding:8px 12px;cursor:pointer;font-size:13px}
+.status{display:inline-block;font-weight:700;padding:3px 10px;border-radius:999px;font-size:13px}
+.s2{background:color-mix(in srgb,var(--ok) 20%,var(--surface));color:var(--ok)}
+.s4{background:color-mix(in srgb,var(--warn) 20%,var(--surface));color:var(--warn)}
+.s5{background:color-mix(in srgb,var(--bad) 20%,var(--surface));color:var(--bad)}
+footer{text-align:center;color:var(--muted);font-size:12.5px;padding:26px 0 10px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top">
+  <div class="eyebrow">Pemrograman Web · Web UMKM Gorontalo</div>
+  <h1>REST API + JSON: API Katalog Produk</h1>
+  <div class="sub">Endpoint, method, status code · contoh PHP + simulator interaktif</div>
+  <nav class="tabs" id="tabs"></nav>
+</header>
+
+<section class="panel" data-panel="konsep">
+  <div class="card">
+    <span class="tag">Cerita Pembuka</span>
+    <div class="story"><p>Katalog produk UMKM ingin tampil di website, aplikasi mobile, dan marketplace sekaligus. Jika setiap tampilan mengambil data dengan cara sendiri, datanya cepat tidak sinkron. Solusinya: satu pintu data berupa API yang bisa dipakai semua klien.</p></div>
+    <h3>Setelah pertemuan ini, saya bisa…</h3>
+    <ul>
+      <li>Menjelaskan apa itu REST API dan mengapa dipakai[cite: 9].</li>
+      <li>Merancang endpoint dan memilih method HTTP yang tepat[cite: 9].</li>
+      <li>Membaca dan menulis format JSON[cite: 9].</li>
+      <li>Memilih status code yang sesuai untuk setiap hasil[cite: 9].</li>
+      <li>Membuat API katalog produk sederhana dengan PHP + MySQL[cite: 9].</li>
+    </ul>
+    <div class="analogy"><strong>Analogi:</strong> API seperti pelayan restoran. Klien (pelanggan) tidak masuk ke dapur (database); ia memesan lewat pelayan dengan format yang disepakati, lalu pelayan membawa hasilnya[cite: 9].</div>
+  </div>
+  <div class="card">
+    <h2>1. Apa itu REST dan JSON?</h2>
+    <p><strong>REST</strong> adalah gaya perancangan API di atas HTTP: setiap data dianggap sebagai <em>resource</em> yang punya alamat (URL), dan aksi ditentukan oleh method HTTP. Server bersifat <em>stateless</em>: setiap request membawa semua informasi yang dibutuhkan[cite: 9].</p>
+    <p><strong>JSON</strong> (JavaScript Object Notation) adalah format pertukaran data berbasis teks yang ringan dan mudah dibaca manusia maupun mesin[cite: 9].</p>
+<pre><code>{
+  "id": 3,
+  "name": "Keripik Pisang Gorontalo",
+  "price": 25000,
+  "category": "Makanan",
+  "in_stock": true,
+  "tags": ["camilan", "oleh-oleh"]
+}</code></pre>
+    <p class="muted">Aturan penting JSON: kunci wajib di dalam tanda kutip ganda, tidak boleh ada koma di akhir, dan tipe data yang dikenal: string, number, boolean, null, array, object[cite: 9].</p>
+  </div>
+</section>
+
+<section class="panel" data-panel="endpoint">
+  <div class="card">
+    <h2>2. Endpoint &amp; Method</h2>
+    <p>Endpoint memakai <strong>kata benda jamak</strong>, bukan kata kerja. Aksi dinyatakan oleh method[cite: 9].</p>
+    <table>
+      <tr><th>Aksi</th><th>Method</th><th>Endpoint</th><th>Body</th></tr>
+      <tr><td>Daftar produk</td><td><code>GET</code></td><td><code>/api/products</code></td><td>—</td></tr>
+      <tr><td>Detail produk</td><td><code>GET</code></td><td><code>/api/products/3</code></td><td>—</td></tr>
+      <tr><td>Tambah produk</td><td><code>POST</code></td><td><code>/api/products</code></td><td>JSON produk</td></tr>
+      <tr><td>Ubah produk</td><td><code>PUT</code></td><td><code>/api/products/3</code></td><td>JSON produk</td></tr>
+      <tr><td>Hapus produk</td><td><code>DELETE</code></td><td><code>/api/products/3</code></td><td>—</td></tr>
+    </table>
+    <h3>Query string untuk filter &amp; paging</h3>
+    <p><code>GET /api/products?category=Makanan&amp;page=2&amp;limit=10</code></p>
+    <div class="row"><div class="muted">Hindari: <code>/getProduct</code>, <code>/deleteProduct?id=3</code>. Pakai: <code>GET /products/3</code>, <code>DELETE /products/3</code>[cite: 9].</div></div>
+  </div>
+  <div class="card">
+    <h2>3. Status Code</h2>
+    <table>
+      <tr><th>Kode</th><th>Arti</th><th>Dipakai ketika</th></tr>
+      <tr><td><code>200 OK</code></td><td>Berhasil</td><td>GET, PUT berhasil</td></tr>
+      <tr><td><code>201 Created</code></td><td>Data dibuat</td><td>POST berhasil</td></tr>
+      <tr><td><code>204 No Content</code></td><td>Berhasil tanpa isi</td><td>DELETE berhasil</td></tr>
+      <tr><td><code>400 Bad Request</code></td><td>Request salah</td><td>JSON rusak / data tidak valid</td></tr>
+      <tr><td><code>401 / 403</code></td><td>Belum login / tidak berhak</td><td>Akses ditolak</td></tr>
+      <tr><td><code>404 Not Found</code></td><td>Tidak ditemukan</td><td>ID produk tidak ada</td></tr>
+      <tr><td><code>422 Unprocessable</code></td><td>Validasi gagal</td><td>Harga negatif, nama kosong</td></tr>
+      <tr><td><code>500 Server Error</code></td><td>Kesalahan server</td><td>Bug / database mati</td></tr>
+    </table>
+    <p class="muted">Kelompok: 2xx sukses · 4xx kesalahan klien · 5xx kesalahan server[cite: 9].</p>
+  </div>
+</section>
+
+<section class="panel" data-panel="php">
+  <div class="card">
+    <h2>4. API Katalog Produk dengan PHP</h2>
+    <p>Gunakan <code>koneksi.php</code> (PDO) dari Pertemuan CRUD, lalu buat satu file <code>api/products.php</code> yang membaca method dan mengembalikan JSON[cite: 9].</p>
+<pre><code>&lt;?php
+// api/products.php
+require "../koneksi.php";
+header("Content-Type: application/json; charset=utf-8");
+
+function kirim($data, $kode = 200) {
+    http_response_code($kode);
+    echo json_encode($data, JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+$method = $_SERVER['REQUEST_METHOD'];
+$id     = isset($_GET['id']) ? (int) $_GET['id'] : null;
+$body   = json_decode(file_get_contents("php://input"), true);</code></pre>
+    <h3>GET — daftar &amp; detail</h3>
+<pre><code>if ($method === 'GET') {
+    if ($id) {
+        $s = $pdo-&gt;prepare("SELECT * FROM products WHERE id = ?");
+        $s-&gt;execute([$id]);
+        $p = $s-&gt;fetch();
+        $p ? kirim($p) : kirim(["error" =&gt; "Produk tidak ditemukan"], 404);
+    }
+    $rows = $pdo-&gt;query("SELECT * FROM products ORDER BY id DESC")-&gt;fetchAll();
+    kirim(["data" =&gt; $rows]);
+}</code></pre>
+    <h3>POST — tambah produk</h3>
+<pre><code>if ($method === 'POST') {
+    $name  = trim($body['name'] ?? '');
+    $price = $body['price'] ?? null;
+    if ($body === null) kirim(["error" =&gt; "JSON tidak valid"], 400);
+    if ($name === '' || !is_numeric($price) || $price &lt; 0)
+        kirim(["error" =&gt; "Nama/harga tidak valid"], 422);
+
+    $s = $pdo-&gt;prepare("INSERT INTO products (name, price, category_id) VALUES (?,?,?)");
+    $s-&gt;execute([$name, $price, $body['category_id'] ?? 1]);
+    kirim(["id" =&gt; $pdo-&gt;lastInsertId(), "name" =&gt; $name], 201);
+}</code></pre>
+    <h3>PUT &amp; DELETE</h3>
+<pre><code>if ($method === 'PUT' &amp;&amp; $id) {
+    $s = $pdo-&gt;prepare("UPDATE products SET name=?, price=? WHERE id=?");
+    $s-&gt;execute([$body['name'], $body['price'], $id]);
+    $s-&gt;rowCount() ? kirim(["message" =&gt; "Diperbarui"]) : kirim(["error" =&gt; "Tidak ditemukan"], 404);
+}
+if ($method === 'DELETE' &amp;&amp; $id) {
+    $s = $pdo-&gt;prepare("DELETE FROM products WHERE id=?");
+    $s-&gt;execute([$id]);
+    http_response_code($s-&gt;rowCount() ? 204 : 404);
+    exit;
+}
+kirim(["error" =&gt; "Method tidak didukung"], 405);</code></pre>
+    <h3>Memanggil dari JavaScript</h3>
+<pre><code>const res = await fetch("/api/products.php");
+const json = await res.json();
+if (res.ok) tampilkan(json.data);
+else alert(json.error);</code></pre>
+  </div>
+</section>
+
+<section class="panel" data-panel="simulator">
+  <div class="card">
+    <h2>5. Simulator API Katalog Produk</h2>
+    <p class="muted">Simulasi berjalan di browser (data contoh di memori, tanpa server) untuk melatih memilih method, endpoint, dan membaca status code. Coba: ID yang tidak ada, harga negatif, JSON rusak[cite: 9].</p>
+    <div class="sim">
+      <div class="row">
+        <select id="m"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+        <input class="url" id="u" value="/api/products">
+        <button class="go" id="send">Kirim</button>
+        <button class="ghost" id="reset">Reset data</button>
+      </div>
+      <div class="row" id="presets"></div>
+      <textarea id="b" placeholder='Body JSON, mis. {"name":"Binte Biluhuta","price":18000}'></textarea>
+      <div>Status: <span id="st" class="status s2">—</span></div>
+<pre><code id="out">// Respons akan muncul di sini</code></pre>
+    </div>
+  </div>
+</section>
+
+<section class="panel" data-panel="praktik">
+  <div class="card">
+    <h2>Praktik Terbimbing</h2>
+    <ol>
+      <li>Rancang tabel endpoint untuk <code>products</code> dan <code>categories</code>[cite: 9].</li>
+      <li>Buat <code>GET /api/products</code> yang mengembalikan JSON dari database[cite: 9].</li>
+      <li>Buat <code>GET</code> detail dengan respons 404 jika ID tidak ada[cite: 9].</li>
+      <li>Buat <code>POST</code> dengan validasi dan status 201/422[cite: 9].</li>
+      <li>Buat <code>PUT</code> dan <code>DELETE</code> dengan status yang tepat[cite: 9].</li>
+      <li>Uji semua endpoint memakai Postman/Thunder Client atau <code>curl</code>[cite: 9].</li>
+      <li>Tampilkan data API ke halaman katalog memakai <code>fetch()</code>[cite: 9].</li>
+    </ol>
+<pre><code>curl -X POST http://localhost/api/products.php \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Kopi Mongondow","price":30000}'</code></pre>
+  </div>
+  <div class="card">
+    <h2>Cek Pemahaman</h2>
+    <details class="qa"><summary>Mengapa endpoint memakai kata benda, bukan kata kerja?</summary><p>Karena aksi sudah ditentukan oleh method HTTP. <code>DELETE /products/3</code> sudah jelas artinya, tidak perlu <code>/deleteProduct</code>[cite: 9].</p></details>
+    <details class="qa"><summary>Apa beda 400, 404, dan 422?</summary><p>400: request rusak (misal JSON tidak valid). 404: resource tidak ada. 422: format benar tetapi isi gagal validasi (misal harga negatif)[cite: 9].</p></details>
+    <details class="qa"><summary>Mengapa POST yang berhasil memakai 201, bukan 200?</summary><p>201 menegaskan bahwa resource baru telah dibuat, sehingga klien dapat mengetahui hasilnya lebih tepat[cite: 9].</p></details>
+    <details class="qa"><summary>Apa arti stateless pada REST?</summary><p>Server tidak menyimpan konteks klien antar request; setiap request memuat semua informasi yang dibutuhkan (mis. token autentikasi)[cite: 9].</p></details>
+  </div>
+  <div class="card">
+    <span class="tag">Sprint PBL — Web UMKM Gorontalo</span>
+    <h2>Target Sprint</h2>
+    <p>Bangun API katalog produk (<code>GET/POST/PUT/DELETE</code>) dengan respons JSON dan status code yang konsisten, lalu hubungkan halaman katalog website ke API tersebut[cite: 9].</p>
+    <h3>Bukti yang dikumpulkan</h3>
+    <ul><li>Tabel dokumentasi endpoint[cite: 9].</li><li>Screenshot hasil uji Postman/curl untuk tiap method[cite: 9].</li><li>Commit repository[cite: 9].</li><li>Catatan kendala dan keputusan desain API[cite: 9].</li></ul>
+    <h3>Refleksi</h3>
+    <ol>
+      <li>Apa yang sudah benar-benar saya pahami?[cite: 9]</li>
+      <li>Bagian mana yang masih saya ikuti tanpa memahami?[cite: 9]</li>
+      <li>Bug/kesalahan apa yang muncul dan bagaimana saya memperbaikinya?[cite: 9]</li>
+      <li>Apa kontribusi saya pada sprint ini?[cite: 9]</li>
+    </ol>
+  </div>
+</section>
+
+<footer>REST API + JSON · Pemrograman Web · Proyek Web UMKM Gorontalo</footer>
+</div>
+
+<script>
+const tabs=[["konsep","Konsep & JSON"],["endpoint","Endpoint & Status"],["php","API dengan PHP"],["simulator","Simulator"],["praktik","Praktik & Sprint"]];
+const nav=document.getElementById("tabs");
+tabs.forEach(([id,l],i)=>{
+  const b=document.createElement("button");b.textContent=l;if(!i)b.classList.add("active");
+  b.onclick=()=>{
+    document.querySelectorAll("nav.tabs button").forEach(x=>x.classList.remove("active"));
+    document.querySelectorAll("section.panel").forEach(x=>x.classList.remove("active"));
+    b.classList.add("active");
+    document.querySelector(`section[data-panel="${id}"]`).classList.add("active");
+    window.scrollTo({top:0,behavior:"smooth"});
+  };
+  nav.appendChild(b);
+});
+document.querySelector('section[data-panel="konsep"]').classList.add("active");
+
+// Simulator
+const seed=()=>[
+  {id:1,name:"Keripik Pisang Gorontalo",price:25000,category:"Makanan"},
+  {id:2,name:"Sulaman Karawo",price:150000,category:"Kerajinan"},
+  {id:3,name:"Binte Biluhuta Instan",price:18000,category:"Makanan"}
+];
+let db=seed(),nextId=4;
+const $=id=>document.getElementById(id);
+const presets=[
+  ["GET","/api/products",""],["GET","/api/products/2",""],["GET","/api/products/99",""],
+  ["POST","/api/products",'{"name":"Kopi Gorontalo","price":30000,"category":"Minuman"}'],
+  ["POST","/api/products",'{"name":"","price":-5}'],
+  ["POST","/api/products",'{nama: rusak}'],
+  ["PUT","/api/products/1",'{"name":"Keripik Pisang Premium","price":27000}'],
+  ["DELETE","/api/products/3",""],["PATCH","/api/products",""]
+];
+presets.forEach(([m,u,b])=>{
+  const x=document.createElement("button");x.className="ghost";x.textContent=m+" "+u.replace("/api","");
+  x.onclick=()=>{ $("m").value=m==="PATCH"?"GET":m; $("u").value=u; $("b").value=b; };
+  $("presets").appendChild(x);
+});
+function reply(code,data){
+  const el=$("st");el.textContent=code+" "+({200:"OK",201:"Created",204:"No Content",400:"Bad Request",404:"Not Found",405:"Method Not Allowed",422:"Unprocessable Entity"}[code]||"");
+  el.className="status "+(code<300?"s2":code<500?"s4":"s5");
+  $("out").textContent=data===undefined?"// (tanpa body)":JSON.stringify(data,null,2);
+}
+$("send").onclick=()=>{
+  const m=$("m").value,u=$("u").value.trim();
+  const mt=u.match(/^\/api\/products(?:\/(\d+))?(?:\?.*)?$/);
+  if(!mt)return reply(404,{error:"Endpoint tidak dikenal"});
+  const id=mt[1]?+mt[1]:null,item=id?db.find(p=>p.id===id):null;
+  let body=null;
+  if(m==="POST"||m==="PUT"){
+    try{body=JSON.parse($("b").value||"null");}catch(e){return reply(400,{error:"JSON tidak valid"});}
+    if(!body)return reply(400,{error:"Body JSON wajib diisi"});
+  }
+  const valid=b=>typeof b.name==="string"&&b.name.trim()!==""&&typeof b.price==="number"&&b.price>=0;
+  if(m==="GET"){
+    if(!id)return reply(200,{data:db});
+    return item?reply(200,item):reply(404,{error:"Produk tidak ditemukan"});
+  }
+  if(m==="POST"){
+    if(id)return reply(405,{error:"Method tidak didukung pada endpoint ini"});
+    if(!valid(body))return reply(422,{error:"Nama wajib diisi dan harga harus angka ≥ 0"});
+    const p={id:nextId++,name:body.name.trim(),price:body.price,category:body.category||"Lainnya"};
+    db.push(p);return reply(201,p);
+  }
+  if(m==="PUT"){
+    if(!id)return reply(405,{error:"PUT membutuhkan ID di URL"});
+    if(!item)return reply(404,{error:"Produk tidak ditemukan"});
+    if(!valid(body))return reply(422,{error:"Nama wajib diisi dan harga harus angka ≥ 0"});
+    Object.assign(item,{name:body.name.trim(),price:body.price});return reply(200,item);
+  }
+  if(m==="DELETE"){
+    if(!id)return reply(405,{error:"DELETE membutuhkan ID di URL"});
+    if(!item)return reply(404,{error:"Produk tidak ditemukan"});
+    db=db.filter(p=>p.id!==id);return reply(204);
+  }
+};
+$("reset").onclick=()=>{db=seed();nextId=4;$("st").textContent="—";$("st").className="status s2";$("out").textContent="// Data direset";};
+</script>
+</body>
+</html>
